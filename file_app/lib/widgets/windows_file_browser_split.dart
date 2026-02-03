@@ -71,7 +71,7 @@ class WindowsFileBrowserSplit extends StatelessWidget {
   }
 
   // 快速访问区域
-  Widget _buildQuickAccess() {
+  Widget _buildQuickAccess(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       child: Column(
@@ -87,23 +87,37 @@ class WindowsFileBrowserSplit extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           _buildQuickAccessItem(
+            context,
             '桌面',
             Icons.desktop_windows,
             PathUtils.desktopPath,
           ),
           _buildQuickAccessItem(
+            context,
             '下载',
             Icons.file_download,
             PathUtils.downloadsPath,
           ),
-          _buildQuickAccessItem('文档', Icons.folder, PathUtils.documentsPath),
           _buildQuickAccessItem(
+            context,
+            '文档',
+            Icons.folder,
+            PathUtils.documentsPath,
+          ),
+          _buildQuickAccessItem(
+            context,
             '图片',
             Icons.photo_library,
             PathUtils.picturesPath,
           ),
-          _buildQuickAccessItem('音乐', Icons.music_note, PathUtils.musicPath),
           _buildQuickAccessItem(
+            context,
+            '音乐',
+            Icons.music_note,
+            PathUtils.musicPath,
+          ),
+          _buildQuickAccessItem(
+            context,
             '视频',
             Icons.video_library,
             PathUtils.videosPath,
@@ -113,7 +127,12 @@ class WindowsFileBrowserSplit extends StatelessWidget {
     );
   }
 
-  Widget _buildQuickAccessItem(String title, IconData icon, String path) {
+  Widget _buildQuickAccessItem(
+    BuildContext context,
+    String title,
+    IconData icon,
+    String path,
+  ) {
     return Container(
       height: 28,
       child: Material(
@@ -139,7 +158,6 @@ class WindowsFileBrowserSplit extends StatelessWidget {
 
   // 驱动器列表
   Widget _buildDriveList(BuildContext context) {
-    final fileProvider = Provider.of<FileProvider>(context, listen: false);
     final drives = PathUtils.getSystemDrives();
 
     return Container(
@@ -159,14 +177,24 @@ class WindowsFileBrowserSplit extends StatelessWidget {
           // 动态生成驱动器列表
           ...drives.map((drivePath) {
             final displayName = PathUtils.getDisplayName(drivePath);
-            return _buildDriveItem(displayName, Icons.storage, drivePath);
-          }).toList(),
+            return _buildDriveItem(
+              context,
+              displayName,
+              Icons.storage,
+              drivePath,
+            );
+          }),
         ],
       ),
     );
   }
 
-  Widget _buildDriveItem(String title, IconData icon, String path) {
+  Widget _buildDriveItem(
+    BuildContext context,
+    String title,
+    IconData icon,
+    String path,
+  ) {
     return Container(
       height: 28,
       child: Material(
