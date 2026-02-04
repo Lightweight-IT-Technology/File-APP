@@ -1,9 +1,7 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/file_provider.dart';
 import '../models/file_model.dart';
-import '../services/file_operations.dart';
 import '../theme/windows_theme.dart';
 import 'windows_toolbar.dart';
 import 'windows_file_item.dart';
@@ -19,33 +17,47 @@ class WindowsFileBrowserSplit extends StatelessWidget {
     return Consumer<FileProvider>(
       builder: (context, fileProvider, child) {
         return Scaffold(
-          backgroundColor: WindowsTheme.lightTheme.scaffoldBackgroundColor,
-          body: Column(
-            children: [
-              // Windows风格工具栏
-              const WindowsToolbar(),
-              // 左右分栏内容区域
-              Expanded(
-                child: Row(
-                  children: [
-                    // 左侧文件栏 (宽度约200px)
-                    Container(
-                      width: 200,
-                      decoration: const BoxDecoration(
-                        border: Border(
-                          right: BorderSide(color: Color(0xFFE1E1E1)),
+          backgroundColor: Colors.transparent, // 完全透明背景
+          body: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withOpacity(0.9),
+                  Colors.white.withOpacity(0.7),
+                ],
+              ),
+            ),
+            child: Column(
+              children: [
+                // 现代化工具栏
+                const WindowsToolbar(),
+                // 左右分栏内容区域
+                Expanded(
+                  child: Row(
+                    children: [
+                      // 左侧文件栏 (现代化透明设计)
+                      Container(
+                        width: 200,
+                        decoration: WindowsTheme.sidebarDecoration,
+                        child: _buildSidebar(context),
+                      ),
+                      // 右侧文件显示区
+                      Expanded(
+                        child: Container(
+                          decoration: WindowsTheme.fileListDecoration,
+                          margin: const EdgeInsets.all(8),
+                          child: _buildFileDisplayArea(context),
                         ),
                       ),
-                      child: _buildSidebar(context),
-                    ),
-                    // 右侧文件显示区
-                    Expanded(child: _buildFileDisplayArea(context)),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              // 状态栏
-              _buildStatusBar(context),
-            ],
+                // 现代化状态栏
+                _buildStatusBar(context),
+              ],
+            ),
           ),
         );
       },
@@ -228,12 +240,14 @@ class WindowsFileBrowserSplit extends StatelessWidget {
         children: [
           // 用户文件夹
           _buildFolderTreeItem(
+            context,
             '用户',
             Icons.person,
             PathUtils.userHomePath,
             true,
           ),
           _buildFolderTreeItem(
+            context,
             '桌面',
             Icons.desktop_windows,
             PathUtils.desktopPath,
@@ -241,6 +255,7 @@ class WindowsFileBrowserSplit extends StatelessWidget {
             level: 1,
           ),
           _buildFolderTreeItem(
+            context,
             '文档',
             Icons.folder,
             PathUtils.documentsPath,
@@ -248,6 +263,7 @@ class WindowsFileBrowserSplit extends StatelessWidget {
             level: 1,
           ),
           _buildFolderTreeItem(
+            context,
             '下载',
             Icons.file_download,
             PathUtils.downloadsPath,
@@ -255,6 +271,7 @@ class WindowsFileBrowserSplit extends StatelessWidget {
             level: 1,
           ),
           _buildFolderTreeItem(
+            context,
             '图片',
             Icons.photo_library,
             PathUtils.picturesPath,
@@ -262,6 +279,7 @@ class WindowsFileBrowserSplit extends StatelessWidget {
             level: 1,
           ),
           _buildFolderTreeItem(
+            context,
             '音乐',
             Icons.music_note,
             PathUtils.musicPath,
@@ -269,6 +287,7 @@ class WindowsFileBrowserSplit extends StatelessWidget {
             level: 1,
           ),
           _buildFolderTreeItem(
+            context,
             '视频',
             Icons.video_library,
             PathUtils.videosPath,
@@ -280,18 +299,20 @@ class WindowsFileBrowserSplit extends StatelessWidget {
           ...PathUtils.getSystemDrives().map((drivePath) {
             final displayName = PathUtils.getDisplayName(drivePath);
             return _buildFolderTreeItem(
+              context,
               displayName,
               Icons.storage,
               drivePath,
               true,
             );
-          }).toList(),
+          }),
         ],
       ),
     );
   }
 
   Widget _buildFolderTreeItem(
+    BuildContext context,
     String title,
     IconData icon,
     String path,
@@ -445,24 +466,33 @@ class WindowsFileBrowserSplit extends StatelessWidget {
     final fileProvider = Provider.of<FileProvider>(context);
 
     return Container(
-      height: 24,
-      decoration: BoxDecoration(
-        color: const Color(0xFFF0F0F0),
-        border: const Border(top: BorderSide(color: Color(0xFFE1E1E1))),
-      ),
+      height: 32,
+      decoration: WindowsTheme.statusBarDecoration,
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
       child: Row(
         children: [
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
           Text(
             '${fileProvider.files.length} 个项目',
-            style: TextStyle(fontSize: 11, color: Colors.grey.shade700),
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.black87,
+              fontWeight: FontWeight.w500,
+            ),
           ),
           const Spacer(),
-          Text(
-            fileProvider.currentPath,
-            style: TextStyle(fontSize: 11, color: Colors.grey.shade700),
+          Expanded(
+            child: Text(
+              fileProvider.currentPath,
+              style: const TextStyle(
+                fontSize: 12,
+                color: Colors.black87,
+                fontWeight: FontWeight.w500,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
         ],
       ),
     );

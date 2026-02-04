@@ -13,54 +13,54 @@ class PathUtils {
   /// 获取桌面路径
   static String get desktopPath {
     if (Platform.isWindows) {
-      return '${userHomePath}\\Desktop';
+      return '$userHomePath\\Desktop';
     } else {
-      return '${userHomePath}/Desktop';
+      return '$userHomePath/Desktop';
     }
   }
 
   /// 获取下载路径
   static String get downloadsPath {
     if (Platform.isWindows) {
-      return '${userHomePath}\\Downloads';
+      return '$userHomePath\\Downloads';
     } else {
-      return '${userHomePath}/Downloads';
+      return '$userHomePath/Downloads';
     }
   }
 
   /// 获取文档路径
   static String get documentsPath {
     if (Platform.isWindows) {
-      return '${userHomePath}\\Documents';
+      return '$userHomePath\\Documents';
     } else {
-      return '${userHomePath}/Documents';
+      return '$userHomePath/Documents';
     }
   }
 
   /// 获取图片路径
   static String get picturesPath {
     if (Platform.isWindows) {
-      return '${userHomePath}\\Pictures';
+      return '$userHomePath\\Pictures';
     } else {
-      return '${userHomePath}/Pictures';
+      return '$userHomePath/Pictures';
     }
   }
 
   /// 获取音乐路径
   static String get musicPath {
     if (Platform.isWindows) {
-      return '${userHomePath}\\Music';
+      return '$userHomePath\\Music';
     } else {
-      return '${userHomePath}/Music';
+      return '$userHomePath/Music';
     }
   }
 
   /// 获取视频路径
   static String get videosPath {
     if (Platform.isWindows) {
-      return '${userHomePath}\\Videos';
+      return '$userHomePath\\Videos';
     } else {
-      return '${userHomePath}/Videos';
+      return '$userHomePath/Videos';
     }
   }
 
