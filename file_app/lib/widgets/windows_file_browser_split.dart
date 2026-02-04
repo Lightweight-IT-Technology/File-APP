@@ -1,62 +1,76 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/file_provider.dart';
+import '../providers/settings_provider.dart';
 import '../models/file_model.dart';
 import '../theme/windows_theme.dart';
 import 'windows_toolbar.dart';
 import 'windows_file_item.dart';
 import 'windows_file_context_menu.dart';
 import 'file_preview.dart';
+import 'settings_dialog.dart';
 import '../utils/path_utils.dart';
+import '../services/window_opacity_manager.dart';
+import 'liquid_glass_effect.dart';
 
 class WindowsFileBrowserSplit extends StatelessWidget {
   const WindowsFileBrowserSplit({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<FileProvider>(
-      builder: (context, fileProvider, child) {
-        return Scaffold(
-          backgroundColor: Colors.transparent, // 完全透明背景
-          body: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.white.withOpacity(0.9),
-                  Colors.white.withOpacity(0.7),
+    return Consumer2<FileProvider, SettingsProvider>(
+      builder: (context, fileProvider, settingsProvider, child) {
+        return LiquidGlassBackground(
+          baseColor: Theme.of(context).scaffoldBackgroundColor,
+          enableDynamicEffects: settingsProvider.settings.enableAnimations,
+          child: Scaffold(
+            backgroundColor: Colors.transparent, // 完全透明背景
+            body: Container(
+              decoration: settingsProvider.getBackgroundDecoration(),
+              child: Column(
+                children: [
+                  // 现代化工具栏
+                  const WindowsToolbar(),
+                  // 左右分栏内容区域
+                  Expanded(
+                    child: Row(
+                      children: [
+                        // 左侧文件栏 (液态玻璃设计)
+                        LiquidGlassEffect(
+                          blurIntensity:
+                              settingsProvider.settings.blurIntensity,
+                          opacity: settingsProvider.settings.uiOpacity * 0.8,
+                          borderRadius: settingsProvider.settings.borderRadius,
+                          enableAnimations:
+                              settingsProvider.settings.enableAnimations,
+                          glassColor: Theme.of(context).cardColor,
+                          child: Container(
+                            width: 200,
+                            child: _buildSidebar(context),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        // 右侧文件显示区
+                        Expanded(
+                          child: LiquidGlassCard(
+                            borderRadius:
+                                settingsProvider.settings.borderRadius,
+                            padding: const EdgeInsets.all(16),
+                            child: _buildFileDisplayArea(context),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // 现代化状态栏
+                  _buildStatusBar(context),
                 ],
               ),
             ),
-            child: Column(
-              children: [
-                // 现代化工具栏
-                const WindowsToolbar(),
-                // 左右分栏内容区域
-                Expanded(
-                  child: Row(
-                    children: [
-                      // 左侧文件栏 (现代化透明设计)
-                      Container(
-                        width: 200,
-                        decoration: WindowsTheme.sidebarDecoration,
-                        child: _buildSidebar(context),
-                      ),
-                      // 右侧文件显示区
-                      Expanded(
-                        child: Container(
-                          decoration: WindowsTheme.fileListDecoration,
-                          margin: const EdgeInsets.all(8),
-                          child: _buildFileDisplayArea(context),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // 现代化状态栏
-                _buildStatusBar(context),
-              ],
+            floatingActionButton: LiquidGlassButton(
+              onPressed: () => _showSettingsDialog(context),
+              borderRadius: 20,
+              child: const Icon(Icons.settings, size: 18),
             ),
           ),
         );
@@ -464,18 +478,22 @@ class WindowsFileBrowserSplit extends StatelessWidget {
 
   Widget _buildStatusBar(BuildContext context) {
     final fileProvider = Provider.of<FileProvider>(context);
+    final settingsProvider = Provider.of<SettingsProvider>(context);
 
     return Container(
       height: 32,
-      decoration: WindowsTheme.statusBarDecoration,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(settingsProvider.getUIOpacity()),
+        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+      ),
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
       child: Row(
         children: [
           const SizedBox(width: 16),
           Text(
             '${fileProvider.files.length} 个项目',
-            style: const TextStyle(
-              fontSize: 12,
+            style: TextStyle(
+              fontSize: settingsProvider.getFontSize(),
               color: Colors.black87,
               fontWeight: FontWeight.w500,
             ),
@@ -484,8 +502,8 @@ class WindowsFileBrowserSplit extends StatelessWidget {
           Expanded(
             child: Text(
               fileProvider.currentPath,
-              style: const TextStyle(
-                fontSize: 12,
+              style: TextStyle(
+                fontSize: settingsProvider.getFontSize(),
                 color: Colors.black87,
                 fontWeight: FontWeight.w500,
               ),
@@ -496,6 +514,11 @@ class WindowsFileBrowserSplit extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// 显示设置对话框
+  void _showSettingsDialog(BuildContext context) {
+    showDialog(context: context, builder: (context) => const SettingsDialog());
   }
 
   void _navigateToPath(BuildContext context, String path) {

@@ -1,39 +1,50 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/file_provider.dart';
+import '../providers/settings_provider.dart';
 import '../theme/windows_theme.dart';
+import 'liquid_glass_effect.dart';
 
 class WindowsToolbar extends StatelessWidget {
   const WindowsToolbar({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 48,
-      decoration: WindowsTheme.toolbarDecoration,
-      margin: const EdgeInsets.all(8),
-      child: Row(
-        children: [
-          // 导航按钮
-          _buildNavigationButtons(context),
-          VerticalDivider(width: 1, color: Colors.grey.withOpacity(0.3)),
-          // 路径显示
-          _buildPathDisplay(context),
-          const Spacer(),
-          // 搜索框
-          _buildSearchBox(context),
-          const SizedBox(width: 12),
-          // 视图切换
-          _buildViewButtons(context),
-        ],
-      ),
+    return Consumer<SettingsProvider>(
+      builder: (context, settingsProvider, child) {
+        return Container(
+          height: 48,
+          margin: const EdgeInsets.all(8),
+          child: LiquidGlassEffect(
+            blurIntensity: settingsProvider.settings.blurIntensity * 0.8,
+            opacity: settingsProvider.settings.uiOpacity * 0.6,
+            borderRadius: settingsProvider.settings.borderRadius,
+            enableAnimations: settingsProvider.settings.enableAnimations,
+            glassColor: Theme.of(context).cardColor,
+            child: Row(
+              children: [
+                // 导航按钮
+                _buildNavigationButtons(context),
+                VerticalDivider(width: 1, color: Colors.white.withOpacity(0.1)),
+                // 路径显示
+                _buildPathDisplay(context),
+                const Spacer(),
+                // 搜索框
+                _buildSearchBox(context),
+                const SizedBox(width: 12),
+                // 视图切换
+                _buildViewButtons(context),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
   Widget _buildNavigationButtons(BuildContext context) {
     final fileProvider = Provider.of<FileProvider>(context, listen: false);
-    
+
     return Row(
       children: [
         _buildToolbarButton(
@@ -59,7 +70,7 @@ class WindowsToolbar extends StatelessWidget {
 
   Widget _buildPathDisplay(BuildContext context) {
     final fileProvider = Provider.of<FileProvider>(context);
-    
+
     return Expanded(
       flex: 3,
       child: Padding(
@@ -94,7 +105,10 @@ class WindowsToolbar extends StatelessWidget {
           hintText: '搜索文件或文件夹...',
           hintStyle: TextStyle(fontSize: 14, color: Colors.grey.shade600),
           prefixIcon: Icon(Icons.search, size: 20, color: Colors.grey.shade600),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 8,
+          ),
           filled: true,
           fillColor: Colors.white.withOpacity(0.8),
           border: OutlineInputBorder(
@@ -107,13 +121,19 @@ class WindowsToolbar extends StatelessWidget {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: const Color(0xFF0078D4).withOpacity(0.5), width: 1.5),
+            borderSide: BorderSide(
+              color: const Color(0xFF0078D4).withOpacity(0.5),
+              width: 1.5,
+            ),
           ),
           isDense: true,
         ),
         style: const TextStyle(fontSize: 14, color: Colors.black87),
         onChanged: (value) {
-          final fileProvider = Provider.of<FileProvider>(context, listen: false);
+          final fileProvider = Provider.of<FileProvider>(
+            context,
+            listen: false,
+          );
           fileProvider.searchFiles(value);
         },
       ),
@@ -127,7 +147,10 @@ class WindowsToolbar extends StatelessWidget {
           icon: Icons.refresh,
           tooltip: '刷新',
           onPressed: () {
-            final fileProvider = Provider.of<FileProvider>(context, listen: false);
+            final fileProvider = Provider.of<FileProvider>(
+              context,
+              listen: false,
+            );
             fileProvider.refresh();
           },
         ),
@@ -155,17 +178,22 @@ class WindowsToolbar extends StatelessWidget {
     bool enabled = true,
     VoidCallback? onPressed,
   }) {
-    return IconButton(
-      icon: Icon(icon, size: 20),
-      tooltip: tooltip,
-      onPressed: enabled ? onPressed : null,
-      iconSize: 20,
-      padding: const EdgeInsets.all(8),
-      constraints: const BoxConstraints(
-        minWidth: 40,
-        minHeight: 40,
+    return LiquidGlassButton(
+      onPressed: enabled ? (onPressed ?? () {}) : () {},
+      borderRadius: 6,
+      enableRippleEffect: true,
+      highlightColor: Colors.white.withOpacity(0.3),
+      child: Container(
+        width: 36,
+        height: 28,
+        child: Icon(
+          icon,
+          size: 18,
+          color: enabled
+              ? Colors.white.withOpacity(0.9)
+              : Colors.white.withOpacity(0.4),
+        ),
       ),
-      style: WindowsTheme.modernIconButtonStyle,
     );
   }
 }
