@@ -189,8 +189,8 @@ class WindowsToolbar extends StatelessWidget {
         child: Icon(
           icon,
           size: 18,
-          color: enabled
-              ? Colors.white.withOpacity(0.9)
+          color: enabled 
+              ? Colors.white.withOpacity(0.9) 
               : Colors.white.withOpacity(0.4),
         ),
       ),

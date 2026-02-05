@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/settings_model.dart';
 import '../services/window_opacity_manager.dart';
+import '../services/image_upload_service.dart';
 
 /// 设置提供者 - 管理应用程序的个性化设置
 class SettingsProvider with ChangeNotifier {
@@ -167,6 +168,57 @@ class SettingsProvider with ChangeNotifier {
     _settings = _settings.copyWith(backgroundImagePath: path);
     await _saveSettings();
     notifyListeners();
+  }
+
+  /// 上传背景图片
+  Future<void> uploadBackgroundImage() async {
+    try {
+      final imageUploadService = ImageUploadService();
+      final imagePath = await imageUploadService.pickImage();
+
+      if (imagePath != null) {
+        // 验证图片
+        final isValid = await imageUploadService.validateImage(imagePath);
+
+        if (isValid) {
+          // 复制到应用目录
+          final copiedPath = await imageUploadService.copyImageToAppDirectory(
+            imagePath,
+          );
+          await updateBackgroundImagePath(copiedPath);
+        } else {
+          throw Exception('图片文件无效或格式不支持');
+        }
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// 删除当前背景图片
+  Future<void> deleteCurrentBackgroundImage() async {
+    try {
+      if (_settings.backgroundImagePath.isNotEmpty) {
+        final imageUploadService = ImageUploadService();
+        await imageUploadService.deleteBackgroundImage(
+          _settings.backgroundImagePath,
+        );
+        await updateBackgroundImagePath('');
+      }
+    } catch (e) {
+      print('删除背景图片失败: $e');
+    }
+  }
+
+  /// 获取所有已上传的背景图片
+  Future<List<String>> getUploadedBackgrounds() async {
+    final imageUploadService = ImageUploadService();
+    return await imageUploadService.getUploadedBackgrounds();
+  }
+
+  /// 设置背景图片
+  Future<void> setBackgroundImage(String imagePath) async {
+    await updateBackgroundImagePath(imagePath);
   }
 
   /// 更新渐变背景

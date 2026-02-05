@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/settings_provider.dart';
 import '../models/settings_model.dart';
 import 'liquid_glass_effect.dart';
+import '../services/image_upload_service.dart';
 
 /// 设置对话框 - 提供个性化设置界面
 class SettingsDialog extends StatefulWidget {
@@ -42,9 +43,7 @@ class _SettingsDialogState extends State<SettingsDialog>
         child: Container(
           width: 600,
           height: 500,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-          ),
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
           child: Column(
             children: [
               // 标题栏
@@ -156,14 +155,20 @@ class _SettingsDialogState extends State<SettingsDialog>
                         LiquidGlassButton(
                           onPressed: () => Navigator.of(context).pop(),
                           borderRadius: 8,
-                          child: const Text('取消', style: TextStyle(fontSize: 12)),
+                          child: const Text(
+                            '取消',
+                            style: TextStyle(fontSize: 12),
+                          ),
                         ),
                         const SizedBox(width: 8),
                         LiquidGlassButton(
                           onPressed: () => Navigator.of(context).pop(),
                           borderRadius: 8,
                           highlightColor: Theme.of(context).primaryColor,
-                          child: const Text('应用', style: TextStyle(fontSize: 12)),
+                          child: const Text(
+                            '应用',
+                            style: TextStyle(fontSize: 12),
+                          ),
                         ),
                       ],
                     ),
@@ -191,7 +196,8 @@ class _SettingsDialogState extends State<SettingsDialog>
             min: 0.1,
             max: 1.0,
             onChanged: (value) => settingsProvider.updateUIOpacity(value),
-            valueText: '${(settingsProvider.settings.uiOpacity * 100).round()}%',
+            valueText:
+                '${(settingsProvider.settings.uiOpacity * 100).round()}%',
           ),
 
           const SizedBox(height: 24),
@@ -202,7 +208,8 @@ class _SettingsDialogState extends State<SettingsDialog>
             min: 0.1,
             max: 1.0,
             onChanged: (value) => settingsProvider.updateWindowOpacity(value),
-            valueText: '${(settingsProvider.settings.windowOpacity * 100).round()}%',
+            valueText:
+                '${(settingsProvider.settings.windowOpacity * 100).round()}%',
           ),
 
           const SizedBox(height: 16),
@@ -228,7 +235,9 @@ class _SettingsDialogState extends State<SettingsDialog>
                   label: const Text('预览效果'),
                   onPressed: () => _previewWindowOpacity(settingsProvider),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                    backgroundColor: Theme.of(
+                      context,
+                    ).primaryColor.withOpacity(0.1),
                     foregroundColor: Theme.of(context).primaryColor,
                   ),
                 ),
@@ -268,31 +277,38 @@ class _SettingsDialogState extends State<SettingsDialog>
             _buildColorPicker(
               label: '背景颜色',
               color: settingsProvider.settings.backgroundColor,
-              onColorChanged: (color) => settingsProvider.updateBackgroundColor(color),
+              onColorChanged: (color) =>
+                  settingsProvider.updateBackgroundColor(color),
             ),
 
-          if (settingsProvider.settings.backgroundType == BackgroundType.gradient)
+          if (settingsProvider.settings.backgroundType ==
+              BackgroundType.gradient)
             Column(
               children: [
                 _buildColorPicker(
                   label: '渐变开始颜色',
                   color: settingsProvider.settings.gradientStartColor,
-                  onColorChanged: (color) => settingsProvider.updateGradientColors(
-                    color,
-                    settingsProvider.settings.gradientEndColor,
-                  ),
+                  onColorChanged: (color) =>
+                      settingsProvider.updateGradientColors(
+                        color,
+                        settingsProvider.settings.gradientEndColor,
+                      ),
                 ),
                 const SizedBox(height: 12),
                 _buildColorPicker(
                   label: '渐变结束颜色',
                   color: settingsProvider.settings.gradientEndColor,
-                  onColorChanged: (color) => settingsProvider.updateGradientColors(
-                    settingsProvider.settings.gradientStartColor,
-                    color,
-                  ),
+                  onColorChanged: (color) =>
+                      settingsProvider.updateGradientColors(
+                        settingsProvider.settings.gradientStartColor,
+                        color,
+                      ),
                 ),
               ],
             ),
+
+          if (settingsProvider.settings.backgroundType == BackgroundType.image)
+            _buildImageBackgroundSettings(settingsProvider),
 
           const SizedBox(height: 16),
           _buildSwitchSetting(
@@ -310,9 +326,170 @@ class _SettingsDialogState extends State<SettingsDialog>
               value: settingsProvider.settings.blurIntensity,
               min: 0.0,
               max: 20.0,
-              onChanged: (value) => settingsProvider.updateBlurEffect(true, value),
+              onChanged: (value) =>
+                  settingsProvider.updateBlurEffect(true, value),
               valueText: '${settingsProvider.settings.blurIntensity.round()}px',
             ),
+        ],
+      ),
+    );
+  }
+
+  /// 构建图片背景设置
+  Widget _buildImageBackgroundSettings(SettingsProvider settingsProvider) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 16),
+        _buildSectionTitle('背景图片设置'),
+
+        // 当前背景图片预览
+        if (settingsProvider.settings.backgroundImagePath.isNotEmpty)
+          Column(
+            children: [
+              const SizedBox(height: 8),
+              Text('当前背景图片:', style: const TextStyle(fontSize: 14)),
+              const SizedBox(height: 8),
+              ImagePreviewWidget(
+                imagePath: settingsProvider.settings.backgroundImagePath,
+                width: 200,
+                height: 120,
+                showDeleteButton: true,
+                onDelete: () => _deleteCurrentBackgroundImage(settingsProvider),
+              ),
+              const SizedBox(height: 8),
+              ElevatedButton.icon(
+                onPressed: () =>
+                    _deleteCurrentBackgroundImage(settingsProvider),
+                icon: const Icon(Icons.delete, size: 16),
+                label: const Text('删除当前背景图片'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red.withOpacity(0.1),
+                  foregroundColor: Colors.red,
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+
+        // 上传新图片按钮
+        ImageUploadButton(
+          onImageSelected: (imagePath) =>
+              _setBackgroundImage(settingsProvider, imagePath),
+          buttonText: '上传背景图片',
+          buttonWidth: 200,
+        ),
+
+        const SizedBox(height: 8),
+        _buildInfoText('支持格式: JPG, PNG, GIF, BMP, WebP (最大10MB)'),
+
+        // 已上传的图片列表
+        const SizedBox(height: 16),
+        _buildSectionTitle('已上传的背景图片'),
+        FutureBuilder<List<String>>(
+          future: settingsProvider.getUploadedBackgrounds(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (snapshot.hasError ||
+                !snapshot.hasData ||
+                snapshot.data!.isEmpty) {
+              return _buildInfoText('暂无已上传的背景图片');
+            }
+
+            final imagePaths = snapshot.data!;
+            return Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: imagePaths.map((imagePath) {
+                final isCurrent =
+                    imagePath == settingsProvider.settings.backgroundImagePath;
+                return GestureDetector(
+                  onTap: () => _setBackgroundImage(settingsProvider, imagePath),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: isCurrent
+                            ? Theme.of(context).primaryColor
+                            : Colors.grey.withOpacity(0.3),
+                        width: isCurrent ? 2 : 1,
+                      ),
+                    ),
+                    child: ImagePreviewWidget(
+                      imagePath: imagePath,
+                      width: 80,
+                      height: 60,
+                      showDeleteButton: true,
+                      onDelete: () =>
+                          _deleteBackgroundImage(settingsProvider, imagePath),
+                    ),
+                  ),
+                );
+              }).toList(),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  /// 设置背景图片
+  void _setBackgroundImage(
+    SettingsProvider settingsProvider,
+    String imagePath,
+  ) {
+    settingsProvider.setBackgroundImage(imagePath);
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('背景图片已设置')));
+  }
+
+  /// 删除当前背景图片
+  void _deleteCurrentBackgroundImage(SettingsProvider settingsProvider) {
+    settingsProvider.deleteCurrentBackgroundImage();
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('当前背景图片已删除')));
+  }
+
+  /// 删除指定的背景图片
+  void _deleteBackgroundImage(
+    SettingsProvider settingsProvider,
+    String imagePath,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('删除背景图片'),
+        content: const Text('确定要删除这个背景图片吗？'),
+        actions: [
+          TextButton(
+            child: const Text('取消'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          TextButton(
+            child: const Text('删除'),
+            onPressed: () {
+              final imageUploadService = ImageUploadService();
+              imageUploadService.deleteBackgroundImage(imagePath);
+
+              // 如果删除的是当前背景图片，则清除设置
+              if (imagePath == settingsProvider.settings.backgroundImagePath) {
+                settingsProvider.updateBackgroundImagePath('');
+              }
+
+              Navigator.of(context).pop();
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('背景图片已删除')));
+
+              // 刷新界面
+              setState(() {});
+            },
+          ),
         ],
       ),
     );
@@ -377,8 +554,10 @@ class _SettingsDialogState extends State<SettingsDialog>
               value: settingsProvider.settings.animationSpeed,
               min: 0.5,
               max: 2.0,
-              onChanged: (value) => settingsProvider.updateAnimationSettings(true, value),
-              valueText: '${(settingsProvider.settings.animationSpeed * 100).round()}%',
+              onChanged: (value) =>
+                  settingsProvider.updateAnimationSettings(true, value),
+              valueText:
+                  '${(settingsProvider.settings.animationSpeed * 100).round()}%',
             ),
 
           const SizedBox(height: 16),
@@ -611,17 +790,17 @@ class _SettingsDialogState extends State<SettingsDialog>
           });
         });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('正在预览窗口透明度效果...')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('正在预览窗口透明度效果...')));
   }
 
   /// 重置窗口透明度
   void _resetWindowOpacity(SettingsProvider settingsProvider) {
     settingsProvider.updateWindowOpacity(1.0);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('窗口透明度已重置为默认值')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('窗口透明度已重置为默认值')));
   }
 
   /// 重置为默认设置
